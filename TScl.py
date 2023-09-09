@@ -32,6 +32,10 @@ def take_screenshot_and_save(x, y, w, h, c):
     os.makedirs(f'{SAVE_PATH}/{c}/', exist_ok=True)
     im1.save(f"{SAVE_PATH}/{c}/{c} | {fix}.png")
 
+def specialmenu(list):
+    for item in list:
+        if item not in chec
+
 def main():
     model = YOLO(MODEL_PATH)
     list_cl = ['7-min5', 'train', 'baloon', 'chest', 'bonus-', 'accept-bonus-all']
@@ -59,35 +63,25 @@ def main():
                 x, y, w, h = box.xywh[-1]
                 c = names[box.cls.take(0)]
                 # take_screenshot_and_save(x, y, w, h, c)
-                
+                # menucheck = ['5-min', '10-min']
+                if '5-min' in checklist:
+                    print(f"im in {c} click on a ")
+                    try:
+                        pyautogui.click('d7min.png')
+                        break
+                    except:
+                        try:
+                            pyautogui.click('d15min.png')
+                            break
+                        except:
+                            pyautogui.click('d5min.png')
+                            break
+                    finally:
+                        break
 
-                # if 'send-train-menu' in checklist or '10-min' in checklist and c == 'send-train-menu':
-                if '10-min' in checklist and c == 'send-train-menu':
-                    for boxy in boxes:
-                        x2, y2, _, _ = boxy.xywh[-1]
-                        c2 = names[boxy.cls.take(0)]
-                        
-                        
-                        # print(checklist)
-                        print('next the it________________________________________________-')
-                        if '7-min' in checklist and c2 == '7-min':
-                            print(checklist)
-                            print(f"________________________________________________ click on a |{c2}|")
-                            click(x2, y2)
-                            break
-                        elif '7-min' not in checklist and c2 == '15-min':
-                            print(checklist)
-                            print(f"________________________________________________ click on a |{c2}|")
-                            click(x2, y2)
-                            break
-                        elif list_menu not in checklist and c2 == '10-min':
-                        # elif all(item not in checklist for item in list_menu) and c2 == '10-min':
-                            print(checklist)
-                            print(f"________________________________________________ click on a |{c2}|")
-                            click(x2, y2)
-                            break
+                # elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
+                elif specialmenu(checklist):
 
-                elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
                     for boxy in boxes:
                         x2, y2, _, _ = boxy.xywh[-1]
                         c2 = names[boxy.cls.take(0)]
@@ -99,6 +93,7 @@ def main():
                             print(f"im in {c} click on a |{c2}|")
                         elif c2 == 'reconnect':
                             click(x2, y2)
+                            print(f"im in {c} click on a |{c2}|")
 
                 # elif c == 'window_bill-train':
                 #     for boxy in boxes:
@@ -111,6 +106,8 @@ def main():
                     break
                 # elif c == 'xx' and list_menu not in checklist:
                 #     click(x, y)
+            break
+        
 
         # counter += 1
 
