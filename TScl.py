@@ -6,11 +6,52 @@ import os
 import time
 import random
 import string
+import win32gui, win32ui, win32con
 
 # Constants
 MODEL_PATH = 'best.pt'
 SAVE_PATH = './databot/'
 MAX_ATTEMPTS = 50
+
+def get_screenshot():
+    h = 860
+    w = 2260
+    # hwnd = None
+    hwnd = win32gui.FindWindow(None, 'TrainStation - Pixel Federation Games - Opera')
+    # get the window image data
+    wDC = win32gui.GetWindowDC(hwnd)
+    dcObj = win32ui.CreateDCFromHandle(wDC)
+    cDC = dcObj.CreateCompatibleDC()
+    dataBitMap = win32ui.CreateBitmap()
+    dataBitMap.CreateCompatibleBitmap(dcObj, w, h)
+    cDC.SelectObject(dataBitMap)
+    cDC.BitBlt((0, 0), (w, h), dcObj, (0, 0), win32con.SRCCOPY)
+
+    # convert the raw data into a format opencv can read
+    #dataBitMap.SaveBitmapFile(cDC, 'debug.bmp')
+    signedIntsArray = dataBitMap.GetBitmapBits(True)
+    img = np.fromstring(signedIntsArray, dtype='uint8')
+    img.shape = (h, w, 4)
+
+    # free resources
+    dcObj.DeleteDC()
+    cDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, wDC)
+    win32gui.DeleteObject(dataBitMap.GetHandle())
+
+    # drop the alpha channel, or cv.matchTemplate() will throw an error like:
+    #   error: (-215:Assertion failed) (depth == CV_8U || depth == CV_32F) && type == _templ.type() 
+    #   && _img.dims() <= 2 in function 'cv::matchTemplate'
+    img = img[...,:3]
+
+    # make image C_CONTIGUOUS to avoid errors that look like:
+    #   File ... in draw_rectangles
+    #   TypeError: an integer is required (got type tuple)
+    # see the discussion here:
+    # https://github.com/opencv/opencv/issues/14866#issuecomment-580207109
+    img = np.ascontiguousarray(img)
+
+    return img
 
 def get_random_string(length):
     letters = string.ascii_lowercase
@@ -32,18 +73,16 @@ def take_screenshot_and_save(x, y, w, h, c):
     os.makedirs(f'{SAVE_PATH}/{c}/', exist_ok=True)
     im1.save(f"{SAVE_PATH}/{c}/{c} | {fix}.png")
 
-def specialmenu(list):
-    for item in list:
-        if item not in chec
-
 def main():
     model = YOLO(MODEL_PATH)
     list_cl = ['7-min5', 'train', 'baloon', 'chest', 'bonus-', 'accept-bonus-all']
     counter = 0
     while counter < MAX_ATTEMPTS:
-        screen_img = pyautogui.screenshot()
-        screen_img = np.array(screen_img)
-        screen_img = cv.cvtColor(screen_img, cv.COLOR_RGB2BGR)
+        # screen_img = pyautogui.screenshot()
+        # screen_img = np.array(screen_img)
+        # screen_img = cv.cvtColor(screen_img, cv.COLOR_RGB2BGR)
+
+        screen_img = get_screenshot()
         results = model(screen_img)
 
         checklist = []
@@ -79,9 +118,9 @@ def main():
                     finally:
                         break
 
-                # elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
-                elif specialmenu(checklist):
-
+                elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
+                # elif specialmenu(checklist):
+                    # print('aprove_____________________')
                     for boxy in boxes:
                         x2, y2, _, _ = boxy.xywh[-1]
                         c2 = names[boxy.cls.take(0)]
@@ -94,6 +133,11 @@ def main():
                         elif c2 == 'reconnect':
                             click(x2, y2)
                             print(f"im in {c} click on a |{c2}|")
+                        # else:
+                            # pyautogui.press('esc')
+                            # pyautogui.click('xx_SO_2.png')
+                            # xx_SO_2.png
+
 
                 # elif c == 'window_bill-train':
                 #     for boxy in boxes:
