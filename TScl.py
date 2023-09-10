@@ -6,15 +6,56 @@ import os
 import time
 import random
 import string
-import win32gui, win32ui, win32con
+import win32gui, win32ui, win32con, win32api
 
 # Constants
 MODEL_PATH = 'best.pt'
 SAVE_PATH = './databot/'
 MAX_ATTEMPTS = 50
 
+#backup
+def get_screen_shot():
+    h = 635
+    w = 1925
+    # hwnd = None
+    hwnd = win32gui.FindWindow(None, 'TrainStation - Pixel Federation Games - Opera')
+    # get the window image data
+    wDC = win32gui.GetWindowDC(hwnd)
+    dcObj = win32ui.CreateDCFromHandle(wDC)
+    cDC = dcObj.CreateCompatibleDC()
+    dataBitMap = win32ui.CreateBitmap()
+    dataBitMap.CreateCompatibleBitmap(dcObj, w, h)
+    cDC.SelectObject(dataBitMap)
+    cDC.BitBlt((0, 0), (w, h), dcObj, (335, 165), win32con.SRCCOPY)
+
+    # convert the raw data into a format opencv can read
+    #dataBitMap.SaveBitmapFile(cDC, 'debug.bmp')
+    signedIntsArray = dataBitMap.GetBitmapBits(True)
+    img = np.fromstring(signedIntsArray, dtype='uint8')
+    img.shape = (h, w, 4)
+
+    # free resources
+    dcObj.DeleteDC()
+    cDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, wDC)
+    win32gui.DeleteObject(dataBitMap.GetHandle())
+
+    # drop the alpha channel, or cv.matchTemplate() will throw an error like:
+    #   error: (-215:Assertion failed) (depth == CV_8U || depth == CV_32F) && type == _templ.type() 
+    #   && _img.dims() <= 2 in function 'cv::matchTemplate'
+    img = img[...,:3]
+
+    # make image C_CONTIGUOUS to avoid errors that look like:
+    #   File ... in draw_rectangles
+    #   TypeError: an integer is required (got type tuple)
+    # see the discussion here:
+    # https://github.com/opencv/opencv/issues/14866#issuecomment-580207109
+    img = np.ascontiguousarray(img)
+
+    return img
+
 def get_screenshot():
-    h = 860
+    h = 800
     w = 2260
     # hwnd = None
     hwnd = win32gui.FindWindow(None, 'TrainStation - Pixel Federation Games - Opera')
@@ -59,7 +100,12 @@ def get_random_string(length):
     return result_str
 
 def click(x, y):
-    pyautogui.click(x, y, button='left')
+    # pyautogui.click(x, y, button='left')
+    x = int(x)
+    y = int(y)
+    win32api.SetCursorPos((x,y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,0,0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,0,0)
 
 def take_screenshot_and_save(x, y, w, h, c):
     p = random.randrange(15, 35)
@@ -84,7 +130,8 @@ def main():
 
         screen_img = get_screenshot()
         results = model(screen_img)
-
+        # if pyautogui.locateOnScreen('baloon.png'):
+        #     pyautogui.click('baloon.png')
         checklist = []
         list_menu = ['7-min', '7-min-null', '15-min', 'send-train-menu']
         for result in results:
@@ -103,7 +150,7 @@ def main():
                 c = names[box.cls.take(0)]
                 # take_screenshot_and_save(x, y, w, h, c)
                 # menucheck = ['5-min', '10-min']
-                if '5-min' in checklist:
+                if '5-min' in checklist or '10-min' in checklist:
                     print(f"im in {c} click on a ")
                     try:
                         pyautogui.click('d7min.png')
@@ -118,6 +165,22 @@ def main():
                     finally:
                         break
 
+                # elif '10-min' in checklist:
+                #     print(f"im in {c} click on a ")
+                #     try:
+                #         pyautogui.click('d7min.png')
+                #         break
+                #     except:
+                #         try:
+                #             pyautogui.click('d15min.png')
+                #             break
+                #         except:
+                #             pyautogui.click('d10min.png')
+                #             break
+                #     finally:
+                #         break
+                elif 'ballon' in checklist:
+                    pyautogui.click('baloon.png')
                 elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
                 # elif specialmenu(checklist):
                     # print('aprove_____________________')
@@ -133,9 +196,8 @@ def main():
                         elif c2 == 'reconnect':
                             click(x2, y2)
                             print(f"im in {c} click on a |{c2}|")
-                        # else:
-                            # pyautogui.press('esc')
-                            # pyautogui.click('xx_SO_2.png')
+                        else:
+                            click(1605, 310)
                             # xx_SO_2.png
 
 
@@ -145,9 +207,13 @@ def main():
                 #         c2 = names[boxy.cls.take(0)]
 
                 elif c in list_cl:
-                    click(x, y)
-                    print(f"click on a |{c}|")
-                    break
+                    try:
+                        pyautogui.click('baloon.png')
+                        break
+                    except:
+                        click(x, y)
+                        print(f"click on a |{c}|")
+                        break
                 # elif c == 'xx' and list_menu not in checklist:
                 #     click(x, y)
             break
