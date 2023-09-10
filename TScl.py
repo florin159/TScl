@@ -103,7 +103,17 @@ def click(x, y):
     # pyautogui.click(x, y, button='left')
     x = int(x)
     y = int(y)
+
+    # Get the handle of the window
+    hwnd = win32gui.FindWindow(None, 'TrainStation - Pixel Federation Games - Opera')
+
+    # Bring the window to the foreground
+    win32gui.SetForegroundWindow(hwnd)
+
+    # Set the cursor position
     win32api.SetCursorPos((x,y))
+
+    # Simulate a left mouse button click
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,0,0)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,0,0)
 
@@ -165,20 +175,7 @@ def main():
                     finally:
                         break
 
-                # elif '10-min' in checklist:
-                #     print(f"im in {c} click on a ")
-                #     try:
-                #         pyautogui.click('d7min.png')
-                #         break
-                #     except:
-                #         try:
-                #             pyautogui.click('d15min.png')
-                #             break
-                #         except:
-                #             pyautogui.click('d10min.png')
-                #             break
-                #     finally:
-                #         break
+
                 elif 'ballon' in checklist:
                     pyautogui.click('baloon.png')
                 elif c in ['special-offer', 'info', 'window_7-min-unlock', 'window_bill-train', 'reconnect-need']:
@@ -212,6 +209,7 @@ def main():
                         break
                     except:
                         click(x, y)
+                        time.sleep(0.3)
                         print(f"click on a |{c}|")
                         break
                 # elif c == 'xx' and list_menu not in checklist:
