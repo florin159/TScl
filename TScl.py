@@ -99,8 +99,23 @@ def get_random_string(length):
     result_str = ''.join(random.choice(letters) for _ in range(length))
     return result_str
 
+def clickkk(x, y):
+    lParam = win32api.MAKELONG(x, y)
+    win32api.PostMessage(hWnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+    win32api.PostMessage(hWnd, win32con.WM_LBUTTONUP, None, lParam)
+
+def clickk(x, y):
+    hWnd = win32gui.FindWindow(None, 'TrainStation - Pixel Federation Games - Opera')
+    x = int(x)
+    y = int(y)
+    lParam = win32api.MAKELONG(x, y)
+
+    hWnd1= win32gui.FindWindowEx(hWnd, None, None, None)
+    win32gui.SendMessage(hWnd1, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+    win32gui.SendMessage(hWnd1, win32con.WM_LBUTTONUP, None, lParam)
+
 def click(x, y):
-    # pyautogui.click(x, y, button='left')
+    pyautogui.click(x, y, button='left')
     x = int(x)
     y = int(y)
 
